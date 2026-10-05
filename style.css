@@ -1,0 +1,111 @@
+/* Custom styles to enhance Tailwind */
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Weather Icons Animation */
+.weather-icon {
+    transition: transform 0.3s ease;
+}
+
+.weather-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Map Container */
+#map {
+    z-index: 1;
+}
+
+/* Search Results Dropdown */
+.search-result-item {
+    transition: all 0.2s ease;
+}
+
+.search-result-item:hover {
+    background-color: #f3f4f6;
+    transform: translateX(4px);
+}
+
+/* Unit Toggle Active State */
+.unit-btn.active {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* AQI Status Colors */
+.aqi-good { background-color: #10b981; color: white; }
+.aqi-moderate { background-color: #f59e0b; color: white; }
+.aqi-unhealthy-sensitive { background-color: #f97316; color: white; }
+.aqi-unhealthy { background-color: #ef4444; color: white; }
+.aqi-very-unhealthy { background-color: #8b5cf6; color: white; }
+.aqi-hazardous { background-color: #7c3aed; color: white; }
+
+/* News Card Hover Effect */
+.news-card {
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.news-card:hover {
+    transform: translateY(-2px);
+    border-bottom-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Forecast Card */
+.forecast-card {
+    transition: all 0.2s ease;
+}
+
+.forecast-card:hover {
+    background-color: #f8fafc;
+    transform: translateY(-2px);
+}
+
+/* Gradient Background for Temperature */
+.temp-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Smooth Transitions */
+* {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Leaflet Map Customizations */
+.leaflet-control-attribution {
+    font-size: 10px !important;
+}
+
+.leaflet-popup-content {
+    font-family: 'Inter', sans-serif !important;
+}

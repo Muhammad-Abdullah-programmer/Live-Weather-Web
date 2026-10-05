@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherWise - Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/96/000000/partly-cloudy-day.png">
+</head>
+<body class="bg-gray-50 font-['Inter'] min-h-screen">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-cloud text-blue-500 text-2xl"></i>
+            </div>
+        </div>
+        <p class="mt-4 text-gray-600">Fetching your local data...</p>
+        <p class="text-sm text-gray-500 mt-2">Allow location access for personalized experience</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-sun text-yellow-500"></i>
+                        Weather<span class="text-blue-600">Wise</span>
+                    </h1>
+                    <p class="text-gray-600 mt-1">Real-time weather, news & local insights</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <!-- Search Bar -->
+                    <div class="relative flex-1">
+                        <input 
+                            type="text" 
+                            id="citySearch" 
+                            placeholder="Search city or zip code..." 
+                            class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        >
+                        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                        <div id="searchResults" class="hidden absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg mt-1 shadow-lg z-10"></div>
+                    </div>
+                    
+                    <!-- Location Button -->
+                    <button id="getLocation" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-location-arrow"></i>
+                        <span class="hidden sm:inline">My Location</span>
+                    </button>
+                    
+                    <!-- Units Toggle -->
+                    <div class="bg-gray-100 p-1 rounded-lg flex">
+                        <button id="unitC" class="unit-btn active px-3 py-1.5 rounded-md">°C</button>
+                        <button id="unitF" class="unit-btn px-3 py-1.5 rounded-md">°F</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Location Display -->
+            <div class="mt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="currentLocation" class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-map-marker-alt text-red-500"></i>
+                        <span class="ml-2">Detecting your location...</span>
+                    </div>
+                    <span id="lastUpdate" class="text-sm text-gray-500"></span>
+                </div>
+                <button id="refreshBtn" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Left Column: Current Weather -->
+            <div class="lg:col-span-2">
+                <!-- Current Weather Card -->
+                <div class="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 class="text-2xl font-bold">Current Weather</h2>
+                            <p id="currentDate" class="text-blue-100 mt-1"></p>
+                        </div>
+                        <div class="text-right">
+                            <div id="currentTemp" class="text-5xl font-bold">--°</div>
+                            <div id="currentCondition" class="text-xl mt-1">--</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>Feels Like</span>
+                            </div>
+                            <div id="feelsLike" class="text-2xl font-bold mt-2">--°</div>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-tint"></i>
+                                <span>Humidity</span>
+                            </div>
+                            <div id="humidity" class="text-2xl font-bold mt-2">--%</div>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-wind"></i>
+                                <span>Wind</span>
+                            </div>
+                            <div id="windSpeed" class="text-2xl font-bold mt-2">-- km/h</div>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-sun"></i>
+                                <span>UV Index</span>
+                            </div>
+                            <div id="uvIndex" class="text-2xl font-bold mt-2">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div class="mt-6 bg-white rounded-2xl p-6 shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">5-Day Forecast</h3>
+                    <div id="forecastContainer" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <!-- Forecast cards will be inserted here -->
+                        <div class="text-center p-4 bg-gray-50 rounded-xl animate-pulse">
+                            <div class="h-4 bg-gray-300 rounded mb-3"></div>
+                            <div class="h-10 bg-gray-300 rounded mb-3"></div>
+                            <div class="h-4 bg-gray-300 rounded"></div>
+                        </div>
+                        <!-- Repeat 4 more times -->
+                    </div>
+                </div>
+
+                <!-- Air Quality & Map -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Air Quality Card -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">Air Quality</h3>
+                            <div id="aqiStatus" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-800">--</div>
+                        </div>
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <div id="aqiValue" class="text-4xl font-bold">--</div>
+                                <p id="aqiMessage" class="text-gray-600 mt-1">Loading data...</p>
+                            </div>
+                            <div class="w-32 h-32 relative">
+                                <canvas id="aqiGauge"></canvas>
+                                <div id="aqiCenter" class="absolute inset-0 flex items-center justify-center text-2xl font-bold"></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span>Data provided by OpenWeather</span>
+                        </div>
+                    </div>
+
+                    <!-- Map Container -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Location Map</h3>
+                        <div id="map" class="h-64 rounded-xl"></div>
+                        <div class="mt-3 text-sm text-gray-500 flex justify-between">
+                            <span>Lat: <span id="mapLat">--</span>, Lon: <span id="mapLon">--</span></span>
+                            <button id="mapToggle" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-layer-group"></i> Toggle Layer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: News & Places -->
+            <div class="space-y-6">
+                <!-- Local News Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg h-[500px] flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-newspaper text-blue-600 mr-2"></i>
+                            Local News
+                        </h3>
+                        <select id="newsCategory" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="general">General</option>
+                            <option value="business">Business</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="health">Health</option>
+                            <option value="science">Science</option>
+                            <option value="sports">Sports</option>
+                            <option value="technology">Technology</option>
+                        </select>
+                    </div>
+                    
+                    <div id="newsContainer" class="flex-1 overflow-y-auto space-y-4 pr-2">
+                        <!-- News articles will be inserted here -->
+                        <div class="animate-pulse">
+                            <div class="h-40 bg-gray-300 rounded-lg mb-3"></div>
+                            <div class="h-4 bg-gray-300 rounded mb-2"></div>
+                            <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t mt-4">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span>Powered by NewsAPI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nearby Places -->
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                            Nearby Places
+                        </h3>
+                        <select id="placesType" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="restaurant">🍽️ Restaurants</option>
+                            <option value="park">🌳 Parks</option>
+                            <option value="museum">🏛️ Museums</option>
+                            <option value="cafe">☕ Cafes</option>
+                            <option value="shopping_mall">🛍️ Shopping</option>
+                        </select>
+                    </div>
+                    
+                    <div id="placesContainer" class="space-y-3">
+                        <!-- Places will be inserted here -->
+                        <div class="animate-pulse">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                                <div class="flex-1">
+                                    <div class="h-4 bg-gray-300 rounded mb-2"></div>
+                                    <div class="h-3 bg-gray-300 rounded w-2/3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <span>Showing places within 5km radius</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 pt-6 border-t border-gray-200 text-center text-gray-600 text-sm">
+            <p>© 2024 WeatherWise Dashboard. Powered by OpenWeather, NewsAPI, and Google Places.</p>
+            <p class="mt-1">This is a demonstration project. API keys required for full functionality.</p>
+            <div class="mt-3 flex justify-center gap-4">
+                <a href="#" class="text-blue-600 hover:text-blue-800"><i class="fab fa-github"></i> GitHub</a>
+                <a href="#" class="text-blue-600 hover:text-blue-800"><i class="fas fa-code"></i> Documentation</a>
+                <a href="#" class="text-blue-600 hover:text-blue-800"><i class="fas fa-bug"></i> Report Issue</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js for AQI Gauge -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Main App -->
+    <script src="script.js"></script>
+</body>
+</html>
